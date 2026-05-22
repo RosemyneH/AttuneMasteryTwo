@@ -1,0 +1,8 @@
+## Interface: 30300
+## Title: Attune Mastery Two
+## Notes: Auto-disables Attune Mastery BoE on duplicate affix drops at configured forge tier.
+## Author: qt
+## Version: 1.0.0
+## SavedVariables: AttuneMasteryTwoDB
+
+AttuneMasteryTwo.lua
