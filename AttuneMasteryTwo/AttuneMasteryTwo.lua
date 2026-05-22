@@ -45,6 +45,20 @@ local function DebugPrint(...)
     end
 end
 
+local RAID_WARN_COLOR_OFF = { r = 1, g = 0.1, b = 0.1 }
+local RAID_WARN_COLOR_ON = { r = 0.1, g = 1, b = 0.1 }
+
+local function RaidWarn(text, colorInfo)
+    if type(RaidNotice_AddMessage) ~= "function" or not RaidWarningFrame then
+        return
+    end
+    local color = colorInfo
+    if type(color) ~= "table" then
+        color = ChatTypeInfo and ChatTypeInfo["RAID_WARNING"] or { r = 1, g = 0.82, b = 0 }
+    end
+    RaidNotice_AddMessage(RaidWarningFrame, text, color)
+end
+
 local function ToNativeBagSlot(uiBag, uiSlot)
     local nativeBag = SERVER_BAG_MAP[uiBag]
     if not nativeBag or not uiSlot then
@@ -102,7 +116,14 @@ local function HasAffix(itemId)
     return mask and mask > 0
 end
 
-local function SetBoEDisabled(disable)
+local function AppendItemLink(msg, itemLink)
+    if itemLink then
+        return msg .. " " .. itemLink
+    end
+    return msg
+end
+
+local function SetBoEDisabled(disable, triggerLink, forgeName)
     if AttuneMasteryTwoDB.suspended then
         DebugPrint("Suspended — skip perk change")
         return false
@@ -114,21 +135,29 @@ local function SetBoEDisabled(disable)
     AttuneMasteryTwoDB.boeDisabled = disable
     ChangePerkOption(PERK_NAME, PERK_OPTION, disable, true)
     if disable then
-        Print("|cFFFF0000BoE Exp = Off|r")
+        local chatMsg = "|cFFFF0000BoE Exp = Off|r"
+        local raidMsg = "Attune Mastery — BoE Exp OFF"
+        if triggerLink then
+            local tier = forgeName or "FORGE"
+            chatMsg = "|cFFFFFFa6" .. tier .. " DETECTED!|r " .. chatMsg
+            raidMsg = "Attune Mastery — " .. tier .. " — BoE Exp OFF"
+        end
+        Print(AppendItemLink(chatMsg, triggerLink))
+        RaidWarn(AppendItemLink(raidMsg, triggerLink), RAID_WARN_COLOR_OFF)
     else
-        Print("|cFF00FF00BoE Exp = On|r")
+        Print(AppendItemLink("|cFF00FF00BoE Exp = On|r", triggerLink))
+        RaidWarn(AppendItemLink("Attune Mastery — BoE Exp ON", triggerLink), RAID_WARN_COLOR_ON)
     end
     UpdateMinimapIcon()
     return true
 end
 
-local function TriggerAutoDisable(forgeName)
+local function TriggerAutoDisable(forgeName, itemLink)
     if AttuneMasteryTwoDB.boeDisabled then
         DebugPrint("BoE already disabled")
         return
     end
-    Print("|cFFFFFFa6" .. (forgeName or "FORGE") .. " DETECTED!|r |cFFFF0000BoE Exp = Off|r")
-    SetBoEDisabled(true)
+    SetBoEDisabled(true, itemLink, forgeName)
 end
 
 local function EvaluateSlot(uiBag, uiSlot)
@@ -205,8 +234,17 @@ local function EvaluateSlot(uiBag, uiSlot)
         return
     end
 
+    if type(GetItemLinkAttuneProgress) == "function" then
+        local progress = GetItemLinkAttuneProgress(link)
+        DebugPrint("GetItemLinkAttuneProgress ->", progress)
+        if type(progress) == "number" and progress >= 100 then
+            DebugPrint("fully attuned — skip BoE disable")
+            return
+        end
+    end
+
     local forgeName = FORGE_NAMES[targetForge] or ("Forge " .. tostring(targetForge))
-    TriggerAutoDisable(forgeName)
+    TriggerAutoDisable(forgeName, link)
 end
 
 local function ScanBag(uiBag)
@@ -529,6 +567,7 @@ SlashCmdList["ATTUNEMASTERYTWO"] = function(msg)
         print("  Custom_GetItemGuid:", type(Custom_GetItemGuid) == "function" and "OK" or "MISSING")
         print("  GetItemLinkTitanforge:", type(GetItemLinkTitanforge) == "function" and "OK" or "MISSING")
         print("  GetItemAttuneForge:", type(GetItemAttuneForge) == "function" and "OK" or "MISSING")
+        print("  GetItemLinkAttuneProgress:", type(GetItemLinkAttuneProgress) == "function" and "OK" or "MISSING")
         print("  GetItemAffixMask:", type(GetItemAffixMask) == "function" and "OK" or "MISSING")
         print("  ChangePerkOption:", type(ChangePerkOption) == "function" and "OK" or "MISSING")
         print("  targetForge:", AttuneMasteryTwoDB.targetForge or 3)
