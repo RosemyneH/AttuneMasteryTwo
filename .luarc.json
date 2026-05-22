@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/LuaLS/vscode-lua/master/setting/schema.json",
+  "runtime": {
+    "version": "Lua 5.1",
+    "path": ["?.lua", "?/init.lua"]
+  },
+  "workspace": {
+    "library": ["/home/qt/Repos/zed-synastrialualsp/library"],
+    "checkThirdParty": false,
+    "maxPreload": 10000,
+    "preloadFileSize": 1000
+  },
+  "diagnostics": {
+    "globals": ["DEFAULT_CHAT_FRAME", "AttuneMasteryTwo", "AttuneMasteryTwoDB", "UpdateMinimapIcon"],
+    "disable": ["duplicate-set-field"]
+  },
+  "hint": {
+    "enable": true,
+    "paramName": "All"
+  }
+}

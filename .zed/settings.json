@@ -1,0 +1,30 @@
+{
+  "languages": {
+    "Lua": {
+      "enable_language_server": true
+    }
+  },
+  "lsp": {
+    "lua-language-server": {
+      "settings": {
+        "Lua": {
+          "runtime": {
+            "version": "Lua 5.1"
+          },
+          "workspace": {
+            "library": ["/home/qt/Repos/zed-synastrialualsp/library"],
+            "checkThirdParty": false,
+            "maxPreload": 10000,
+            "preloadFileSize": 1000
+          },
+          "diagnostics": {
+            "globals": ["DEFAULT_CHAT_FRAME", "AttuneMasteryTwo"]
+          },
+          "hint": {
+            "enable": true
+          }
+        }
+      }
+    }
+  }
+}
